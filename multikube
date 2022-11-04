@@ -1,0 +1,31 @@
+#!/bin/bash
+multi_ssh() {
+    if [ -z "$HOSTS" ]; then
+       echo "Please provide of list of hosts separated by spaces [ENTER]: "
+       read HOSTS
+    fi
+    local hosts=( $HOSTS )
+    tmux new-window "kubectl -n $namespace exec  -ti ${hosts[0]} -- bash"
+    unset hosts[0];
+    for i in "${hosts[@]}"; do
+        echo "$i"
+        tmux split-window -h  "kubectl -n $namespace exec -ti $i -- bash"
+        tmux select-layout tiled > /dev/null
+    done
+    tmux select-pane -t 1
+    tmux set-window-option synchronize-panes on > /dev/null
+}
+
+
+namespace="$1"
+grepregex="$2"
+echo $namespace
+if [ -z "$grepregex" ]; then
+	grepregex="zzzzzzzzzzzzzzz"
+fi
+pods=($(kubectl get pods -n "$namespace" | awk '{print $1}' | egrep -vi "$grepregex"))
+echo $pods
+HOSTS="${pods[@]}"
+tmux
+multi_ssh
+
