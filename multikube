@@ -1,9 +1,5 @@
 #!/bin/bash
 multi_ssh() {
-    if [ -z "$HOSTS" ]; then
-       echo "no hosts "
-       exit 0
-    fi
     local hosts=( $HOSTS )
     tmux new-window "kubectl -n $namespace exec  -ti ${hosts[0]} -- bash"
     unset hosts[0];
@@ -26,6 +22,10 @@ fi
 pods=($(kubectl get pods -n "$namespace" | awk '{print $1}' | egrep -vi "$grepregex"))
 echo $pods
 HOSTS="${pods[@]}"
+if [ -z "$HOSTS" ]; then
+	echo "no hosts "
+	exit 0
+fi
 tmux
 multi_ssh
 
